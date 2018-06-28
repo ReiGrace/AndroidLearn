@@ -1,5 +1,9 @@
 # Cordova
 node_modules/
+jsconfig.json
+.classpath
+.project
+typings/
 # www
 /www
 

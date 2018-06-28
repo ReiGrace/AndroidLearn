@@ -25,12 +25,24 @@ Corova Tools目前的主要功能是更方便的开发调试
 * platform ：支持的平台，例如Andriod、iOS等  
 * plugins ：插件目录  
 * www ：web目录  
+* platform/android/assets：页面文件存储位置，源文件来自www  
+* build：Cordova打包build文件存储位置，源文件来自整个android
 
 7. 插件  
 cordova plugin add <插件官方名称>  
 cordova plugin rm <插件官方名称>  
 
+`config.xml`中的`<allow-intent href="http://*/*" />`代表白名单地址，由`cordova-plugin-whitelist`提供  
 
+`config.xml`中的`<uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />`代表权限的请求，由插件提供  
+
+所有插件这类的权限请求，会到`AndroidManifest.xml`中生成  
+
+8. 更新  
+`npm update -g cordova`：更新Cordova到最新版本  
+`npm install -g cordova@3.1.0-0.2.0`：更新到指定版本  
+`npm info cordova version`：查找最新Cordova版本  
+`cordova platform update android --save`：更新目标项目的平台  
 
 # 解析Java注解  
 1. 注解概念  
@@ -120,10 +132,45 @@ public String eyeColor(){
 
 
 # 遇到的坑  
-1. 添加平台时，如果有中文路径，`cordova-plugin-whitelist`会报错  
+1. 添加平台时，如果有中文路径，`cordova-plugin-whitelist`会报错 
+
+2. 自己写src文件时，要将`<script src="cordova.js"></script>`加入index.html，否则无法加载
+
+3. 5037进程被占用，找到netstat -ano | findstr :5037，tasklist | findstr processID，任务管理器结束，重启adb start-server
+
+4. `npm-check`无法使用是因为nodejs的目录下没有`npm-check`的运行cmd，需要从C:\dev\nodejs\node_modules\node_global下将cmd复制到nodejs目录下  
+
+5. `cordova` 同理，主要原因是环境变量定义的nodejs为执行目录，但是`npm i -g <pakeage>`时，缺安装到了node_global下  
+
+6. !!!无法build的原因，Android版本需要对应`build.gradle`文件的版本，如无法打包，可能因环境变化导致`build.gradle`变化，需要强制指定编译版本  
+```java
+dependencies {
+    compile fileTree(dir: 'libs', include: '*.jar')
+    // SUB-PROJECT DEPENDENCIES START
+    debugCompile(project(path: "CordovaLib", configuration: "debug"))
+    releaseCompile(project(path: "CordovaLib", configuration: "release"))
+    // SUB-PROJECT DEPENDENCIES END
+
+    //修改编译版本
+    compile 'com.android.support:support-v4:23+'
+}
+
+//修改编译版本
+configurations.all {
+    resolutionStrategy {
+        force 'com.android.support:support-v4:23+'
+    }
+}
+
+```  
+``
+7. `D:\proc\AndroidSDK\build-tools`该文件夹存放编译工具的缓存，Android编译首先会找文件中最高版本的工具，编译报错可能需要删除响应的SDK，然后删除该文件夹的缓存  
+
+8.
 
 
 # 参考文献  
+* [Cordova 文档](http://cordova.axuer.com/docs/zh-cn/latest/guide/overview/index.html)
 * [Android 教程](https://www.w3cschool.cn/android/android-tutorial.html)
 * [Apache Cordova开发环境搭建](https://blog.csdn.net/u011127019/article/details/56335719)  
 * [VS Code插件之Cordova Tools](https://blog.csdn.net/u011127019/article/details/59137579)  
